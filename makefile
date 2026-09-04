@@ -1,14 +1,18 @@
-all:
+
+all: compile
+
+t: compile run
+
+compile:
 	clang++ -std=c++26 -o promsg promsg.cpp
 
 run:
-	-listargs $$(pgrep PROClient) 0x$$(grep 'GameAssembly' /proc/$$(pgrep PROClient)/maps | grep ' 00000000 ' | cut -d'-' -f1)
-	./promsg $$(pgrep PROClient) 0x$$(grep 'GameAssembly' /proc/$$(pgrep PROClient)/maps | grep ' 00000000 ' | cut -d'-' -f1)
+	pid=$$(pgrep PROClient);\
+	base=0x$$(grep 'GameAssembly' /proc/$$(pgrep PROClient)/maps | grep ' 00000000 ' | cut -d'-' -f1);\
+	fallbackfile='/tmp/dump_addr';\
+	listargs $${pid} $${base} $${fallbackfile};\
+	./promsg $${pid} $${base} $${fallbackfile};
 
-t:
-	clang++ -std=c++26 -o promsg promsg.cpp
-	-listargs $$(pgrep PROClient) 0x$$(grep 'GameAssembly' /proc/$$(pgrep PROClient)/maps | grep ' 00000000 ' | cut -d'-' -f1)
-	./promsg $$(pgrep PROClient) 0x$$(grep 'GameAssembly' /proc/$$(pgrep PROClient)/maps | grep ' 00000000 ' | cut -d'-' -f1)
 
 clean:
 	-rm -r ./.cache

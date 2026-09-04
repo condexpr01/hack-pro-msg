@@ -1,8 +1,11 @@
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
 #include <stdexcept>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <fstream>
+#include <iostream>
 
 template <typename T = uintptr_t>
 void process_vm_readv_pointer(
@@ -45,15 +48,57 @@ content_type dereference_pointer_chain(pid_t pid, uintptr_t base, uintptr_t base
 }
 
 int main(int argc, char *argv[]) try{
-	if(argc != 3)return 1;
+	if(argc < 3)return 1;
+
+	//opt: fallback file for fallback_start
+	uintptr_t fallback_start{};
+
+	std::string fallback_filename{};
+	std::fstream fallback_file;
+	if(argc == 4){
+		fallback_filename = argv[3];
+		fallback_file.open(fallback_filename.c_str(), std::ios_base::in);
+
+		//calc fallback_start
+		std::string fallback_file_addr{};
+		if(fallback_file.is_open()){
+			std::getline(fallback_file,fallback_file_addr);
+			fallback_start = std::stoll(fallback_file_addr,nullptr,16);
+		}
+	}
 
 	pid_t pid = std::stoi(argv[1]);
 	uintptr_t base = std::stoll(argv[2],nullptr,16);
 
-	//uintptr_t start = dereference_pointer_chain<uintptr_t>(pid,base,0x026222c0,0x248,0x90,0xe0,0xb8,0x18,0x1c8);
-	uintptr_t start = dereference_pointer_chain<uintptr_t>(pid,base,0x025c2570,0x3b8,0x8,0x18,0x50,0x50);
+	uintptr_t start{};
 
-	//printf("%0#.16lX\n",start);
+	try{
+		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x026222c0,0x248,0x90,0xe0,0xb8,0x18,0x1c8);
+		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x025c2570,0x3b8,0x8,0x18,0x50,0x50);
+		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x266d6b8,0x80,0x330,0x40,0x78,0x48);
+		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x260D980,0x38,0xf8,0x28,0x280,0x148,0x48);
+		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x260D980,0x1c0,0xf8,0x28,0x280,0x148,0x48);
+		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x0265df40,0x550,0x4b0,0x40,0x140,0x588,0x1d0,0x108);
+		start = dereference_pointer_chain<uintptr_t>(pid,base,0x0287ca30,0x780,0,0x3c0,0xb8,0x28,0x1a8,0x48);
+
+		//dump valid start to fallback_file
+		if(fallback_file.is_open()){fallback_file.close();}
+		fallback_file.open(fallback_filename, std::ios_base::out | std::ios_base::trunc);
+		if(fallback_file.is_open()){
+			std::string dump_start = std::format("{:#x}",start);
+			fallback_file.write(dump_start.c_str(),dump_start.size());
+		}
+		
+	}catch(std::exception &e){
+		//if pointer chain didn't work, fall back to fallback_start
+		if(fallback_start){
+			start = fallback_start;
+		}else{
+			throw e;
+		}
+	}
+
+	printf("%0#.16lX\n",start);
 
 	#if 1
 	for(int i=0x20;true;i++){
@@ -71,6 +116,7 @@ int main(int argc, char *argv[]) try{
 	return 0;
 }
 catch(std::exception &e){
-	printf("%s\n",e.what());
+	std::cout << e.what() << std::endl;
 	return 1;
 }
+
