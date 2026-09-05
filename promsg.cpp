@@ -79,7 +79,11 @@ int main(int argc, char *argv[]) try{
 		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x260D980,0x38,0xf8,0x28,0x280,0x148,0x48);
 		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x260D980,0x1c0,0xf8,0x28,0x280,0x148,0x48);
 		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x0265df40,0x550,0x4b0,0x40,0x140,0x588,0x1d0,0x108);
-		start = dereference_pointer_chain<uintptr_t>(pid,base,0x0287ca30,0x780,0,0x3c0,0xb8,0x28,0x1a8,0x48);
+		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x0287ca30,0x780,0,0x3c0,0xb8,0x28,0x1a8,0x48);
+
+		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x0287fb48,0x558,0x80);
+		//start = dereference_pointer_chain<uintptr_t>(pid,base,0x0287fb48,0x550,0xf0);
+		start = dereference_pointer_chain<uintptr_t>(pid,base,0x0287fb48,0x560,0x10);
 
 		//dump valid start to fallback_file
 		if(fallback_file.is_open()){fallback_file.close();}
